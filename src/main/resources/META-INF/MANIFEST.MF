@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Main-Class: main.test
+Class-Path: jackson-core-2.6.7.jar jackson-annotations-2.6.0.jar aws-jav
+ a-sdk-kms-1.11.762.jar httpcore-4.4.13.jar joda-time-2.8.1.jar ion-java
+ -1.0.2.jar commons-collections4-4.0.jar commons-logging-1.2.jar aws-jav
+ a-sdk-s3-1.11.762.jar commons-codec-1.11.jar httpclient-4.5.12.jar jmes
+ path-java-1.11.762.jar aws-java-sdk-core-1.11.762.jar jackson-dataforma
+ t-cbor-2.6.7.jar jackson-databind-2.6.7.3.jar
+
