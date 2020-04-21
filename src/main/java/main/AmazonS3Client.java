@@ -1,5 +1,7 @@
 package main;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AnonymousAWSCredentials;
@@ -8,8 +10,15 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.InputStream;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +29,20 @@ public class AmazonS3Client {
     private String bucketName;
     private AmazonS3 s3Client;
 
-    public AmazonS3Client(String bucketName, String serviceEndpoint) {
+    public AmazonS3Client(String bucketName, String serviceEndpoint) throws NoSuchAlgorithmException, KeyManagementException {
         this.bucketName = bucketName;
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        SSLContext context = SSLContext.getInstance("TLS");
+        TrustManager tm = new X509TrustManager() {
+            public void checkClientTrusted(X509Certificate[] chain, String authType) { }
+            public void checkServerTrusted(X509Certificate[] chain, String authType) { }
+            public X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+        };
+        context.init(null, new TrustManager[] { tm }, null);
+        SSLSocketFactory factory = new SGSocketFactory(context,SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        clientConfiguration.getApacheHttpClientConfig().setSslSocketFactory(factory);
         s3Client = AmazonS3ClientBuilder
                 .standard()
                 .withCredentials(new AWSCredentialsProvider() {
@@ -35,6 +56,7 @@ public class AmazonS3Client {
 
                     }
                 })
+                .withClientConfiguration(clientConfiguration)
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(serviceEndpoint, Regions.US_EAST_1.name()))
                 .withPathStyleAccessEnabled(true)
                 .build();
@@ -113,7 +135,9 @@ public class AmazonS3Client {
 
     public void completeMultipartUpload(String objectId, String uploadId, Map<Integer, String> parts) {
         List<PartETag> eTags = new ArrayList<>();
-        parts.forEach((partIndex, partTag) -> eTags.add(new PartETag(partIndex, partTag)));
+        for (Map.Entry<Integer, String> entry : parts.entrySet()) {
+            eTags.add(new PartETag(entry.getKey(), entry.getValue()));
+        }
         CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(bucketName, objectId, uploadId, eTags);
         try {
             s3Client.completeMultipartUpload(compRequest);

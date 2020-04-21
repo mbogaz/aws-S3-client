@@ -3,14 +3,16 @@ package main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class test {
 
-    public static void main(String[] args) throws FileNotFoundException {
-        String bucketName = "deneme";
-        String serviceEndpoint = "https://172.16.7.155:8081";
+    public static void main(String[] args) throws FileNotFoundException, KeyManagementException, NoSuchAlgorithmException {
+        String bucketName = "digitaldepo";
+        String serviceEndpoint = "https://172.17.36.20:8082";
 
         if (args.length == 0) {
             System.out.println("lütfen dosya pathini giriniz");
@@ -39,7 +41,6 @@ public class test {
         }
 
         AmazonS3Client s3 = new AmazonS3Client(bucketName, serviceEndpoint);
-        s3.download("unknown");
 
         String testId = "burak";
         s3.put(testId, new FileInputStream(f), (int) f.length());
